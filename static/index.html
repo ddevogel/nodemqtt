@@ -1,0 +1,61 @@
+<html>
+<head>
+  <title>test Ws mqtt.js</title>
+</head>
+<body>
+  <div id="div">
+    <label for="topic">Topic</label>
+    <input id="topic" type="text"></input>
+    <input id="button" type="button" value="Subscribe"></input>
+  </div>
+  <div id="message"></div>
+<script src="mqttws31.js"></script>
+<script src="jquery-2.1.4.min.js"></script>
+<script>
+var client;
+
+$(function() {
+  $.ajax({
+    method: "GET",
+    url: "/endpoint"
+  })
+  .done(function( endpoint ) {
+    client = new Paho.MQTT.Client(endpoint.host, endpoint.port, "", Math.random().toString(36).substr(2, 5));
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
+    client.connect({onSuccess:onConnect});
+  });
+});
+
+
+document.getElementById("button").addEventListener("click", subscribe);
+
+function subscribe(){
+  var path = document.getElementById('topic').value.toLowerCase();
+  // if(path.indexOf("/") !== 0){
+  //   path = "/" + path;
+  // }
+  console.log(path);
+  client.subscribe(path);
+}
+
+function onConnect() {
+  console.log("onConnect");
+}
+
+function onConnectionLost(responseObject) {
+  if (responseObject.errorCode !== 0) {
+    console.log("onConnectionLost:"+responseObject.errorMessage);
+    client.connect({onSuccess:onConnect});
+  }
+}
+
+function onMessageArrived(message) {
+  console.log("onMessageArrived:"+message.payloadString);
+  document.getElementById("message").innerHTML += "<br>" + message.payloadString;
+
+}
+</script>
+
+</body>
+</html>
